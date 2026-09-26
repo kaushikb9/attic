@@ -143,8 +143,10 @@ live in `Grouping.Tuning`, with notes.
   `releases/latest/download/Attic.dmg` link always serves the newest one. The
   README links it relatively (`../../releases/…`), so no account name sits in
   the files. It also scans the built app for private data.
-- To publish: `git tag v<next> && ./release.sh --publish`. That pushes main and
-  the tag and creates the GitHub release with both DMGs.
+- To publish: `git tag -a v<next> -m "<what changed, for people>"` then
+  `./release.sh --publish`. That pushes main and the tag and creates the
+  GitHub release with both DMGs; the tag's message becomes its "What's new".
+  `--publish` refuses a tag without a message.
 - The app is ad-hoc signed, not notarized. On another Mac, macOS blocks the
   first launch: open System Settings › Privacy & Security and click **Open
   Anyway**. The README and release notes say so.
