@@ -57,7 +57,9 @@ Hard boundaries:
   - `last-run.json`: counts only.
 - Overrides: `ATTIC_HOME`, `ATTIC_BEST` (export folder), `ATTIC_FIXTURE` (use a
   folder library instead of Photos), `ATTIC_SCRIPT` (scripted actions; fixture
-  only).
+  only). Steps are listed in `Sources/AtticKit/Script.swift`; `type:<keys>`
+  sends keystrokes through the app's own event queue, so the real window's
+  keyboard shortcuts can be tested.
 - The binary also runs as a tool:
   - `Attic --make-fixture <dir>` writes the synthetic library (generated
     shapes, designed feature prints, GPS in the files).
@@ -68,7 +70,8 @@ Hard boundaries:
   - `Attic --make-demo <dir>` writes the illustrated demo library (beach,
     mountains, city, food and a re-saved sunset, all drawn in code) used for
     the README screenshots. `scripts/screenshots.sh` captures the real window
-    on it into `docs/screenshots/`. It needs Screen Recording permission.
+    on it into `docs/screenshots/` (with `window-check.swift --save`). It needs
+    Screen Recording permission.
 
 Build pieces, all of which work with just the Command Line Tools:
 - `swift build` compiles.
@@ -87,12 +90,15 @@ Build pieces, all of which work with just the Command Line Tools:
    cancelling Photos' prompt, export keeping GPS but not the camera,
    re-export, rename moving the folder), plus real Vision on a synthetic image.
 3. Builds the bundle and renders 7 snapshots.
-4. **The real window** (`scripts/window-check.swift`): runs the app on the
-   fixture with scripted actions (for example
-   `section:marked,confirm-all,delete`), captures the window, and fails if it
-   drew blank. A blank window scores about 100 colours from edge shading; a
-   drawn one 800 or more. The threshold is 300. It needs Screen Recording
-   permission for the terminal, and without it the check says it was skipped.
+4. **The real window** (`scripts/window-check.swift`): opens the app in the
+   background (it never takes the keyboard) on the fixture with scripted
+   actions (for example `section:marked,confirm-all,delete`), captures the
+   window, and fails if it drew blank. A blank window scores about 100 colours
+   from edge shading; a drawn one 800 or more. The threshold is 300. With
+   `--expect`/`--reject` it also reads the window's text with Vision, on-device:
+   the demo library's first section on launch must show its 1 duplicate group,
+   and a typed `s` must empty it. It needs Screen Recording permission for the
+   terminal, and without it the check says it was skipped.
 5. **Public-safety scan** (`scripts/public-check.sh`): fails if a tracked file
    or any commit contains a pattern from the git-ignored `.public-denylist`
    (one regex per line). With no denylist, it says it was skipped.
@@ -101,7 +107,7 @@ Tests are named for the rule they hold. Views are thin: every button calls an
 `AppModel` method, and the tests call those same methods.
 
 What `check.sh` can't cover: real clicks (it scripts the same model calls
-instead), and the PhotoKit calls themselves (access, delete, iCloud
+instead; keys go through the real window with `type:`), and the PhotoKit calls themselves (access, delete, iCloud
 originals). Check those by hand after `./deploy.sh`, and read `last-run.json`.
 
 ## How it decides
@@ -144,13 +150,6 @@ live in `Grouping.Tuning`, with notes.
   Anyway**. The README and release notes say so.
 - Use `SKIP_CHECK=1` only when the deploy itself is the fix, and say so in the
   commit.
-
-## Known issues
-
-- **The first section shown can render stale, intermittently.** Once, the
-  Duplicates page said "0 groups" while the sidebar said 1. Switching sections
-  fixed it, and it didn't recur in five reruns. `scripts/screenshots.sh` visits
-  another section first to stay clear of it. The cause isn't found yet.
 
 ## Deferred (don't build unless asked)
 
@@ -198,3 +197,10 @@ live in `Grouping.Tuning`, with notes.
   prints. (macOS 26 puts icons that do not fill the square into a grey tile.)
 - **`exit()` skips `defer`.** The window check left test apps running until
   every exit went through one function that closes them.
+- **A test launch must never take the keyboard.** The "stale first section"
+  (2026-09-26: Duplicates said "0 groups · No duplicates left to review") was
+  no render bug. The capture launched Attic in front while the owner was
+  typing elsewhere; the Duplicates list takes focus on appear, and one `s`
+  (skip) or `a` (keep all) emptied it. The sidebar in that frame agreed (no
+  count by Duplicates), which is what gave it away. Window checks now open the
+  app with `activates = false`, and drive keys only through `type:`.

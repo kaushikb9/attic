@@ -13,8 +13,13 @@ dist/Attic.app/Contents/MacOS/Attic --snapshot "$T/shots" "$T/fixture" | grep -q
 n=$(ls "$T/shots" | wc -l | tr -d ' ')
 [ "$n" -eq 7 ] || { echo "check: expected 7 snapshots, got $n in $T/shots"; exit 1; }
 # The real window, after the actions that have broken it before.
-swift scripts/window-check.swift dist/Attic.app/Contents/MacOS/Attic "$T/fixture" "section:marked,confirm-all,delete"
+swift scripts/window-check.swift dist/Attic.app "$T/fixture" "section:marked,confirm-all,delete"
 rm -f "$T/fixture/deleted.json"
-swift scripts/window-check.swift dist/Attic.app/Contents/MacOS/Attic "$T/fixture" "section:retakes"
+swift scripts/window-check.swift dist/Attic.app "$T/fixture" "section:retakes"
+# The first section on launch shows the demo's one duplicate group, and a
+# typed "s" (skip) in the real window empties it: the check can tell them apart.
+dist/Attic.app/Contents/MacOS/Attic --make-demo "$T/demo" >/dev/null
+swift scripts/window-check.swift dist/Attic.app "$T/demo" "" --expect "1 group" --reject "No duplicates left"
+swift scripts/window-check.swift dist/Attic.app "$T/demo" "type:s" --expect "No duplicates left"
 scripts/public-check.sh
 echo "check: all green (snapshots in $T/shots)"
