@@ -173,5 +173,8 @@ live in `Grouping.Tuning`, with notes.
   `ExifDateTimeOriginal`.
 - **Export file names must be path-safe.** A `/` in an id prefix pointed at a
   folder that didn't exist.
+- **Judge an icon at Dock size, next to real icons.** The first "window" icon
+  read as a pale disc with specks at 55 pt. The fix was one bold shape, prints
+  two to three times bigger, no thin lines, and stronger colours.
 - **`exit()` skips `defer`.** The window check left test apps running until
   every exit went through one function that closes them.
