@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleName</key><string>Attic</string>
+  <key>CFBundleDisplayName</key><string>Attic</string>
+  <key>CFBundleIdentifier</key><string>app.attic.mac</string>
+  <key>CFBundleExecutable</key><string>Attic</string>
+  <key>CFBundleIconFile</key><string>Attic</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>CFBundleShortVersionString</key><string>__VERSION__</string>
+  <key>CFBundleVersion</key><string>__BUILD__</string>
+  <key>LSMinimumSystemVersion</key><string>15.0</string>
+  <key>LSApplicationCategoryType</key><string>public.app-category.photography</string>
+  <key>NSPrincipalClass</key><string>NSApplication</string>
+  <key>NSHighResolutionCapable</key><true/>
+  <key>NSPhotoLibraryUsageDescription</key>
+  <string>Attic looks at your photos on this Mac to find duplicates, retakes and your best shots. Nothing leaves your Mac unless you export it.</string>
+  <key>NSPhotoLibraryAddUsageDescription</key>
+  <string>Attic moves photos you mark to Recently Deleted when you ask it to.</string>
+</dict>
+</plist>

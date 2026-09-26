@@ -1,0 +1,6 @@
+.build/
+*.app
+.DS_Store
+/dist/
+NOTES.local.md
+.public-denylist
