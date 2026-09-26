@@ -175,6 +175,8 @@ live in `Grouping.Tuning`, with notes.
   folder that didn't exist.
 - **Judge an icon at Dock size, next to real icons.** The first "window" icon
   read as a pale disc with specks at 55 pt. The fix was one bold shape, prints
-  two to three times bigger, no thin lines, and stronger colours.
+  two to three times bigger, no thin lines, and stronger colours. Then the
+  teal wall went too: golden light filling the whole rounded square, and the
+  prints. (macOS 26 puts icons that do not fill the square into a grey tile.)
 - **`exit()` skips `defer`.** The window check left test apps running until
   every exit went through one function that closes them.
