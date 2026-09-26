@@ -4,38 +4,64 @@ A Mac app for your Apple Photos library: find duplicates, clean up retakes,
 and pick the best photos from every trip and event. Everything runs on your
 Mac. Your photos are never uploaded anywhere.
 
+**[Download Attic for Mac](../../releases/latest/download/Attic.dmg)**
+· macOS 15+ · Apple Silicon · free and open source
+
 ![Attic icon](docs/icon.png)
 
-## What it does
+## Why you'd use it
 
-- **Duplicates.** The same picture more than once (re-saves, WhatsApp copies,
-  double imports), even years apart. Attic keeps the original.
-- **Retakes.** When you took five shots to get one right, Attic groups them and
-  suggests the keeper, with a one-line reason: eyes open, sharpest, better
-  framed.
-- **Best of.** Your library grouped into events by time, place and activity
-  (beach, mountains, food, concerts…), with three picks suggested for each.
-  Export the ones you like to `~/Pictures/best-of/`.
-- **One careful delete.** Nothing is deleted until you press "Delete from
-  Photos…". Photos asks you to confirm, and deleted photos stay in Recently
-  Deleted for 30 days.
+- **You took eleven shots to get one where everyone's eyes are open.** Attic
+  groups those tries together, suggests the keeper ("the faces are clearest";
+  "#2 blinked"), and marks the rest to delete in one go.
+- **The same photo is in your library three times.** It came back from a
+  WhatsApp group, a friend's AirDrop and a second import. Attic finds copies
+  even years apart and keeps the full-size original.
+- **iCloud says your storage is full.** Clearing retakes and copies is the
+  fastest way to win space back without touching the photos that matter.
+- **You want the best 20 photos from a trip,** for a photo book, a slideshow or
+  the family group. Attic splits your library into events (a beach week, a
+  mountain weekend, a city evening), suggests three picks for each, and exports
+  the ones you tick to one folder.
+- **You want to give an app or an AI assistant some of your photos, not all of
+  them.** Export a curated folder and share only that. The rest of your library
+  stays put.
 
-Your decisions are remembered, so a rescan only asks about new photos.
+## How it looks
+
+These screenshots use an illustrated demo library, drawn in code with no real
+photos. Run `Attic --make-demo <dir>` to generate it.
+
+**Retakes:** several tries at one moment, with the keeper suggested and the
+reason given.
+![Retakes](docs/screenshots/retakes.png)
+
+**Duplicates:** the same picture more than once. The small re-saved copy goes,
+and the original stays.
+![Duplicates](docs/screenshots/duplicates.png)
+
+**Best of:** events by time, place and activity, three picks each. Nothing is
+exported until you press Export.
+![Best of](docs/screenshots/best-of.png)
+
+**One careful delete:** everything you marked, in one place. Photos asks you
+to confirm, and deleted photos stay in Recently Deleted for 30 days.
+![Marked for deletion](docs/screenshots/marked.png)
 
 ## Privacy
 
 - Photos are analysed on your Mac with Apple's Vision framework.
 - Nothing is uploaded, and photos that are only in iCloud aren't downloaded
-  for analysis.
+  for analysis. Originals are fetched only for photos you export.
 - One setting is off by default: "Name places with Apple Maps" sends each
   event's approximate location to Apple to name it.
+- Your decisions are remembered locally, so a rescan only asks about new
+  photos.
 
 ## Install
 
-Requires macOS 15 or later on an Apple Silicon Mac.
-
-1. Download `Attic-<version>.dmg` from
-   [Releases](../../releases), open it, and drag Attic to Applications.
+1. [Download Attic.dmg](../../releases/latest/download/Attic.dmg),
+   open it, and drag Attic to Applications.
 2. The first time you open it, macOS says it can't verify the app. Attic isn't
    notarized by Apple yet. Open **System Settings › Privacy & Security**,
    scroll down, and click **Open Anyway** next to Attic.
@@ -47,12 +73,13 @@ Needs the Xcode Command Line Tools (`xcode-select --install`). Xcode itself
 isn't needed.
 
 ```sh
-./check.sh      # tests and checks
-./deploy.sh     # build and install to ~/Applications
-./release.sh    # build a DMG into dist/
+./check.sh               # tests and checks
+./deploy.sh              # build and install to ~/Applications
+scripts/screenshots.sh   # regenerate the README screenshots from the demo library
 ```
 
-See [AGENTS.md](AGENTS.md) for how it works.
+Releases: `git tag vX.Y.Z && ./release.sh --publish`. See
+[AGENTS.md](AGENTS.md) for how it works.
 
 ## License
 

@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import AtticCore
 
@@ -17,7 +18,14 @@ enum Script {
             case "rescan": await model.rescan()
             case "msg": model.message = "Deleted 5 photos. They stay in Recently Deleted in Photos for 30 days."
             case "drop": model.debugDrop(Array(model.photos.keys.prefix(3)))
+            case "light": NSApp.appearance = NSAppearance(named: .aqua)
+            case "dark": NSApp.appearance = NSAppearance(named: .darkAqua)
+            case "wait": try? await Task.sleep(for: .seconds(2))
             default:
+                if step.hasPrefix("size:"), let wh = Optional(step.dropFirst(5).split(separator: "x").compactMap { Double($0) }), wh.count == 2,
+                   let win = NSApp.windows.first(where: { $0.isVisible }) {
+                    win.setContentSize(NSSize(width: wh[0], height: wh[1])); win.center()
+                }
                 if step.hasPrefix("section:"), let s = AppModel.Section(rawValue: String(step.dropFirst(8))) { model.section = s }
             }
             FileHandle.standardError.write(Data("script: \(step) -> phase \(model.phase) section \(model.section.rawValue) photos \(model.photos.count) marked \(model.marked.count) message \(model.message ?? "-")\n".utf8))

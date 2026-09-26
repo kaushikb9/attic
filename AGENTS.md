@@ -3,7 +3,7 @@
 ```sh
 ./check.sh     # tests, app bundle, section snapshots, real-window check, public-safety scan
 ./deploy.sh    # check, build release, install ~/Applications/Attic.app
-./release.sh   # check, build release, package dist/Attic-<version>.dmg
+./release.sh   # on a v* tag: check, build, package dist/Attic-<version>.dmg (+ Attic.dmg); --publish to release
 ```
 
 If a `NOTES.local.md` exists next to this file, read it too. It holds the
@@ -65,6 +65,10 @@ Hard boundaries:
     to PNG.
   - `Attic --make-icon <png>` draws the icon. It's drawn in code, so there's no
     binary asset.
+  - `Attic --make-demo <dir>` writes the illustrated demo library (beach,
+    mountains, city, food and a re-saved sunset, all drawn in code) used for
+    the README screenshots. `scripts/screenshots.sh` captures the real window
+    on it into `docs/screenshots/`. It needs Screen Recording permission.
 
 Build pieces, all of which work with just the Command Line Tools:
 - `swift build` compiles.
@@ -124,15 +128,29 @@ live in `Grouping.Tuning`, with notes.
 ## Deploy
 
 - `./deploy.sh` installs to `~/Applications`. It refuses while Attic is open.
-- `./release.sh` builds `dist/Attic-<version>.dmg` (the app plus an
-  Applications link). The version comes from the latest `v*` git tag.
+- Versions come from git. Every build (`deploy.sh` too) takes the latest `v*`
+  tag, with `-dev` once the code has moved past it, so the installed app
+  always says which code it is.
+- `./release.sh` refuses unless HEAD is exactly a `v*` tag with a clean tree.
+  It builds `dist/Attic-<version>.dmg` (the app plus an Applications link) and
+  a copy named `Attic.dmg`, so the repo's
+  `releases/latest/download/Attic.dmg` link always serves the newest one. The
+  README links it relatively (`../../releases/…`), so no account name sits in
+  the files. It also scans the built app for private data.
+- To publish: `git tag v<next> && ./release.sh --publish`. That pushes main and
+  the tag and creates the GitHub release with both DMGs.
 - The app is ad-hoc signed, not notarized. On another Mac, macOS blocks the
   first launch: open System Settings › Privacy & Security and click **Open
-  Anyway**. The README says so.
-- Publishing a release is manual: tag, run `./release.sh`, then
-  `gh release create v<version> dist/Attic-<version>.dmg`.
+  Anyway**. The README and release notes say so.
 - Use `SKIP_CHECK=1` only when the deploy itself is the fix, and say so in the
   commit.
+
+## Known issues
+
+- **The first section shown can render stale, intermittently.** Once, the
+  Duplicates page said "0 groups" while the sidebar said 1. Switching sections
+  fixed it, and it didn't recur in five reruns. `scripts/screenshots.sh` visits
+  another section first to stay clear of it. The cause isn't found yet.
 
 ## Deferred (don't build unless asked)
 

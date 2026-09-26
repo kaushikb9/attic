@@ -13,8 +13,13 @@ APP=dist/Attic.app
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN" "$APP/Contents/MacOS/Attic"
-# VERSION (e.g. 0.2.0) comes from release.sh; builds without it are dev builds.
-VERSION=${VERSION:-0.0.0}
+# Version from git: the latest v* tag (v0.1.2 -> 0.1.2), with "-dev" when the
+# code has moved past it. release.sh insists on an exact tag instead.
+if [ -z "$VERSION" ]; then
+  TAG=$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null || echo v0.0.0)
+  VERSION=${TAG#v}
+  git describe --tags --exact-match --match 'v*' >/dev/null 2>&1 || VERSION="$VERSION-dev"
+fi
 BUILD=$(git rev-list --count HEAD 2>/dev/null || echo 0)
 sed -e "s/__VERSION__/$VERSION/" -e "s/__BUILD__/$BUILD/" scripts/Info.plist > "$APP/Contents/Info.plist"
 
