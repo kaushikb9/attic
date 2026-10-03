@@ -83,6 +83,24 @@ struct Harness {
         #expect(h.model.marked.isEmpty)
     }
 
+    @Test func skipIsOneUndoAway() async throws {
+        let h = try await Harness()
+        h.model.skip(h.model.visibleGroups(.duplicates)[0])
+        #expect(h.model.visibleGroups(.duplicates).isEmpty)
+        #expect(h.model.message?.contains("⌘Z") == true)
+        h.model.undo()
+        #expect(h.model.visibleGroups(.duplicates).count == 1)
+        #expect(h.model.message == nil)
+    }
+
+    @Test func aGroupLeavingTheViewSaysWhatHappened() async throws {
+        let h = try await Harness()
+        h.model.keepAll(h.model.visibleGroups(.duplicates)[0])
+        #expect(h.model.message == "Kept all 2 · ⌘Z undoes")
+        h.model.confirm(h.model.visibleGroups(.retakes)[0])
+        #expect(h.model.message == "Marked 4 for deletion · ⌘Z undoes")
+    }
+
     @Test func decisionsSurviveARelaunchButSkipDoesNot() async throws {
         let h = try await Harness()
         h.model.notRetakes(h.model.visibleGroups(.retakes)[0])

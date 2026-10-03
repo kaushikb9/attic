@@ -36,7 +36,10 @@ public final class AppModel {
 
     private var keepEdits: [String: Set<String>] = [:]
     private var pickEdits: [String: Set<String>] = [:]
-    private var undoStack: [[String: Decision?]] = []
+    /// Every action on a group is one ⌘Z: decisions restore what was there,
+    /// a skip brings the group back.
+    private enum Undo { case decisions([String: Decision?]), skip(String) }
+    private var undoStack: [Undo] = []
 
     public let source: PhotoSource
     public let store: StateStore
@@ -121,25 +124,37 @@ public final class AppModel {
     /// Photos until "Delete from Photos…".
     public func confirm(_ g: PhotoGroup) {
         let keep = keepSet(g)
+        let n = g.photos.count - keep.count
         record(g.photos.map { ($0.id, keep.contains($0.id) ? .keep : .delete) },
-               g.kind == .duplicates ? .duplicates : .confirm)
+               g.kind == .duplicates ? .duplicates : .confirm,
+               done: n > 0 ? "Marked \(n) for deletion" : "Kept all \(g.photos.count)")
     }
 
-    public func keepAll(_ g: PhotoGroup) { record(g.photos.map { ($0.id, .keep) }, .keepAll) }
+    public func keepAll(_ g: PhotoGroup) {
+        record(g.photos.map { ($0.id, .keep) }, .keepAll, done: "Kept all \(g.photos.count)")
+    }
 
     /// Keeps all, and records that the grouping was wrong (tuning data).
-    public func notRetakes(_ g: PhotoGroup) { record(g.photos.map { ($0.id, .keep) }, .notRetakes) }
+    public func notRetakes(_ g: PhotoGroup) {
+        record(g.photos.map { ($0.id, .keep) }, .notRetakes, done: "Kept all \(g.photos.count), not retakes")
+    }
 
     /// Ask again next launch.
-    public func skip(_ g: PhotoGroup) { skippedGroups.insert(g.id) }
+    public func skip(_ g: PhotoGroup) {
+        skippedGroups.insert(g.id)
+        undoStack.append(.skip(g.id))
+        message = "Skipped until next launch · ⌘Z undoes"
+    }
 
-    private func record(_ items: [(String, Decision.Verdict)], _ source: Decision.Source) {
+    /// `done` is the one line saying what happened. A group leaving the view
+    /// says so, because a stray key can do it unseen (2026-09-26).
+    private func record(_ items: [(String, Decision.Verdict)], _ source: Decision.Source, done: String) {
         var before: [String: Decision?] = [:]
         for (id, _) in items { before[id] = state.decisions[id] }
         do {
             try save { s in for (id, v) in items { s.decisions[id] = Decision(v, source) } }
-            undoStack.append(before)
-            message = nil
+            undoStack.append(.decisions(before))
+            message = "\(done) · ⌘Z undoes"
         } catch {
             message = "Not saved: \(error.localizedDescription). Check that ~/Library/Application Support/Attic is writable."
         }
@@ -153,8 +168,12 @@ public final class AppModel {
     public var canUndo: Bool { !undoStack.isEmpty }
 
     public func undo() {
-        guard let before = undoStack.popLast() else { return }
-        try? save { s in for (id, d) in before { s.decisions[id] = d } }
+        guard let last = undoStack.popLast() else { return }
+        switch last {
+        case let .decisions(before): try? save { s in for (id, d) in before { s.decisions[id] = d } }
+        case let .skip(id): skippedGroups.remove(id)
+        }
+        message = nil
         rebuild()
         writeSummary()
     }
@@ -164,7 +183,7 @@ public final class AppModel {
     public var marked: [Photo] { state.marked.compactMap { photos[$0] }.sorted { $0.asset.date > $1.asset.date } }
 
     public func unmark(_ id: String) {
-        record([(id, .keep)], .confirm)
+        record([(id, .keep)], .confirm, done: "Kept 1")
     }
 
     /// One batch, one confirmation from Photos. Deleted photos stay in
