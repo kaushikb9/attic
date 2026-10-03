@@ -3,6 +3,10 @@ import SwiftUI
 
 /// Six design tokens (paper, ink, muted, line, card, gold), plus a
 /// delete red that only ever means "this leaves your library".
+/// Text colours meet WCAG AA (4.5:1) on every surface they sit on, including
+/// goldSoft. tokens.css's light muted and gold fell short (4.4 and 3.9:1),
+/// so light muted, gold and del and dark muted are a step darker or lighter
+/// than the shared tokens (2026-10-03).
 public enum Theme {
     static func dynamic(_ light: UInt32, _ dark: UInt32) -> Color {
         Color(nsColor: NSColor(name: nil) { a in
@@ -15,11 +19,11 @@ public enum Theme {
     public static let bg = dynamic(0xFAF8F4, 0x131210)
     public static let card = dynamic(0xFFFFFF, 0x1B1A17)
     public static let ink = dynamic(0x1C1B18, 0xE8E4DC)
-    public static let muted = dynamic(0x78736A, 0x8F887C)
+    public static let muted = dynamic(0x6D6860, 0x938C80)
     public static let line = dynamic(0xE6E1D7, 0x2A2721)
-    public static let gold = dynamic(0xA8720A, 0xD49A2A)
+    public static let gold = dynamic(0x986709, 0xD49A2A)
     public static let goldSoft = dynamic(0xF4EAD2, 0x2C2415)
-    public static let del = dynamic(0xB4432F, 0xE07A64)
+    public static let del = dynamic(0xB0412E, 0xE07A64)
     public static let delSoft = dynamic(0xF6E3DE, 0x2E1B16)
 
     // Four sizes, no fifth (tokens.css), plus 20 for the page title.
