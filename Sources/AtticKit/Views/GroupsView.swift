@@ -23,7 +23,9 @@ struct GroupsView: View {
             .focusable()
             .focused($focused)
             .focusEffectDisabled()
-            .onAppear { focused = true }
+            // Deferred: on a section switch the new list isn't in the window yet
+            // when onAppear runs, and focus fell back to the window (keys went nowhere).
+            .onAppear { DispatchQueue.main.async { focused = true } }
             .onKeyPress(characters: .init(charactersIn: "jkans "), phases: .down) { press in
                 key(press.characters, proxy: proxy)
             }
