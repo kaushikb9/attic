@@ -1,7 +1,7 @@
 # Attic
 
 ```sh
-./check.sh     # tests, app bundle, section snapshots, real-window check, public-safety scan
+./check.sh     # tests, app bundle, section snapshots, real-window checks, e2e walks, public-safety scan
 ./deploy.sh    # check, build release, install ~/Applications/Attic.app
 ./release.sh   # on a v* tag: check, build, package dist/Attic-<version>.dmg (+ Attic.dmg); --publish to release
 ```
@@ -96,18 +96,35 @@ Build pieces, all of which work with just the Command Line Tools:
    window, and fails if it drew blank. A blank window scores about 100 colours
    from edge shading; a drawn one 800 or more. The threshold is 300. With
    `--expect`/`--reject` it also reads the window's text with Vision, on-device:
-   the demo library's first section on launch must show its 1 duplicate group,
-   and a typed `s` must empty it. It needs Screen Recording permission for the
-   terminal, and without it the check says it was skipped.
-5. **Public-safety scan** (`scripts/public-check.sh`): fails if a tracked file
+   the demo library's first section on launch must show its 1 duplicate group.
+   It needs Screen Recording permission for the terminal, and without it the
+   check says it was skipped.
+5. **e2e walks** (`scripts/e2e.swift`, about 10 s): each walk opens Attic in the
+   background on a fresh copy of the demo library and uses it through the
+   accessibility API, as VoiceOver would: it presses buttons, selects sidebar
+   rows, chooses menu items, types into the rename field and reads the text
+   back, waiting for each expectation rather than sleeping. Keyboard shortcuts
+   go through `type:`. It never moves the mouse or takes the keyboard. Walks:
+   `first-launch`, `duplicates-by-clicks` (keep/delete pills, mark, keep all,
+   skip, each undone from Edit ▸ Undo, banner dismiss), `keyboard` (j, a,
+   space, return after a section switch), `retakes-marked-delete` (not
+   retakes, mark, keep instead, the one-batch delete), `best-of-export-rename-skip`
+   (pick, export with files on disk, rename, skip, the filter, reopen) and
+   `menus-and-rescan` (Go ▸ each section, File ▸ Rescan keeping decisions).
+   Run one: `swift scripts/e2e.swift dist/Attic.app keyboard`. Needs
+   Accessibility permission for the terminal; without it, it says it was
+   skipped.
+6. **Public-safety scan** (`scripts/public-check.sh`): fails if a tracked file
    or any commit contains a pattern from the git-ignored `.public-denylist`
    (one regex per line). With no denylist, it says it was skipped.
 
 Tests are named for the rule they hold. Views are thin: every button calls an
 `AppModel` method, and the tests call those same methods.
 
-What `check.sh` can't cover: real clicks (it scripts the same model calls
-instead; keys go through the real window with `type:`), and the PhotoKit calls themselves (access, delete, iCloud
+What `check.sh` can't cover: real mouse clicks and drags (the walks press
+controls through accessibility instead); the zoom sheet, opened by a tap with
+no accessibility action; "Name places with Apple Maps" (never pressed, it
+would send locations to Apple); the Photos-access-denied page; and the PhotoKit calls themselves (access, delete, iCloud
 originals). Check those by hand after `./deploy.sh`, and read `last-run.json`.
 
 ## How it decides
@@ -189,7 +206,8 @@ Measured or confirmed, deliberately not fixed yet:
 - A local model tie-breaker: tried in the prototype, slow, and it never changed
   a keeper.
 - Videos and Live Photo motion.
-- Driving the real window with clicks (XCUITest needs Xcode).
+- Real mouse clicks and drags in the e2e walks (CGEvent would take over the
+  mouse while someone works; accessibility presses cover every button).
 
 ## Learned the hard way
 
@@ -233,3 +251,13 @@ Measured or confirmed, deliberately not fixed yet:
   (skip) or `a` (keep all) emptied it. The sidebar in that frame agreed (no
   count by Duplicates), which is what gave it away. Window checks now open the
   app with `activates = false`, and drive keys only through `type:`.
+- **SwiftUI's accessibility tree is empty from inside the app.** It builds the
+  tree only for an outside client, so the e2e walks drive Attic from a second
+  process with the accessibility API, which also needs no focus.
+- **Focus set in `onAppear` was lost on a section switch.** The new list wasn't
+  in the window yet, focus fell back to the window, and every shortcut went
+  nowhere after ⌘2 or the Go menu. The keyboard walk caught it; focus is now
+  set one runloop turn later.
+- **`build-app.sh` used to hide compile errors** (swift build prints them to
+  stdout) and left the previous `dist/Attic.app` in place, so a broken build
+  looked like a running one. It now prints the errors and exits 1.

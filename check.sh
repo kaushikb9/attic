@@ -16,10 +16,10 @@ n=$(ls "$T/shots" | wc -l | tr -d ' ')
 swift scripts/window-check.swift dist/Attic.app "$T/fixture" "section:marked,confirm-all,delete"
 rm -f "$T/fixture/deleted.json"
 swift scripts/window-check.swift dist/Attic.app "$T/fixture" "section:retakes"
-# The first section on launch shows the demo's one duplicate group, and a
-# typed "s" (skip) in the real window empties it: the check can tell them apart.
+# The first section on launch draws the demo's one duplicate group.
 dist/Attic.app/Contents/MacOS/Attic --make-demo "$T/demo" >/dev/null
 swift scripts/window-check.swift dist/Attic.app "$T/demo" "" --expect "1 group" --reject "No duplicates left"
-swift scripts/window-check.swift dist/Attic.app "$T/demo" "type:s" --expect "No duplicates left"
+# Every control, used through the accessibility API on fresh demo libraries.
+swift scripts/e2e.swift dist/Attic.app
 scripts/public-check.sh
 echo "check: all green (snapshots in $T/shots)"

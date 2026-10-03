@@ -7,7 +7,9 @@ CONFIG=${CONFIG:-release}
 # -file-prefix-map: source paths baked into the binary (for crash messages)
 # read "./Sources/..." rather than the builder's home folder.
 PREFIX="-Xswiftc -file-prefix-map -Xswiftc $(pwd)=."
-swift build -c "$CONFIG" --product Attic $PREFIX >/dev/null
+# Quiet on success; on failure, show the compiler's output (it goes to
+# stdout) instead of leaving the previous dist/Attic.app looking current.
+out=$(swift build -c "$CONFIG" --product Attic $PREFIX 2>&1) || { echo "$out" | grep -E "error|warning: unre" | head -20; echo "build-app: swift build failed"; exit 1; }
 BIN=$(swift build -c "$CONFIG" $PREFIX --show-bin-path)/Attic
 APP=dist/Attic.app
 rm -rf "$APP"
