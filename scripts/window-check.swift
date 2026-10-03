@@ -2,7 +2,7 @@
 // its window, and fail if it drew blank or its text is not what's expected.
 // Needs Screen Recording permission for the terminal; without it, says so and
 // exits 0 (skipped, not passed).
-//   swift scripts/window-check.swift <Attic.app> <fixture dir> <script> [--expect <text>]... [--reject <text>]... [--save <png>]
+//   swift scripts/window-check.swift <Attic.app> <fixture dir> <script> [--expect <text>]... [--reject <text>]... [--save <png>] [--save-plain <png>]
 // --expect/--reject match the window's text as Vision reads it, on-device.
 // The app is launched in the background: a launch that takes the keyboard
 // turns whatever the person at the Mac is typing into Attic shortcuts
@@ -13,19 +13,20 @@ import Foundation
 import Vision
 
 var args = Array(CommandLine.arguments.dropFirst())
-var expect: [String] = [], reject: [String] = [], save: String?
+var expect: [String] = [], reject: [String] = [], save: String?, plain = false
 while let i = args.firstIndex(where: { $0.hasPrefix("--") }), args.count > i + 1 {
     let (flag, value) = (args[i], args[i + 1])
     switch flag {
     case "--expect": expect.append(value)
     case "--reject": reject.append(value)
     case "--save": save = value
+    case "--save-plain": save = value; plain = true  // no shadow (showcase/)
     default: print("window-check: unknown option \(flag)"); exit(2)
     }
     args.removeSubrange(i...(i + 1))
 }
 guard args.count == 3 else {
-    print("usage: window-check.swift <Attic.app> <fixture dir> <script> [--expect text] [--reject text] [--save png]"); exit(2)
+    print("usage: window-check.swift <Attic.app> <fixture dir> <script> [--expect text] [--reject text] [--save png] [--save-plain png]"); exit(2)
 }
 let (app, fixture, script) = (URL(fileURLWithPath: args[0]), args[1], args[2])
 let label = script.isEmpty ? "launch" : script
@@ -57,8 +58,8 @@ try? FileManager.default.createDirectory(at: out.deletingLastPathComponent(), wi
 let cap = Process()
 cap.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")
 // Checks capture without the shadow (the colour threshold was measured that
-// way); saved screenshots keep it.
-cap.arguments = (save == nil ? ["-x", "-o"] : ["-x"]) + ["-l", "\(id)", out.path]
+// way); saved screenshots keep it unless --save-plain.
+cap.arguments = (save == nil || plain ? ["-x", "-o"] : ["-x"]) + ["-l", "\(id)", out.path]
 try cap.run(); cap.waitUntilExit()
 guard let img = NSImage(contentsOf: out), let rep = img.representations.first as? NSBitmapImageRep ?? NSBitmapImageRep(data: img.tiffRepresentation ?? Data()),
       let cg = rep.cgImage else {
