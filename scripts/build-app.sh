@@ -13,6 +13,13 @@ APP=dist/Attic.app
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN" "$APP/Contents/MacOS/Attic"
+# Release builds drop their symbol tables (about half the binary); the
+# symbols stay beside it in dist/Attic.dSYM for reading crash reports.
+if [ "$CONFIG" = release ]; then
+  rm -rf dist/Attic.dSYM
+  dsymutil "$BIN" -o dist/Attic.dSYM 2>/dev/null
+  strip -S -x "$APP/Contents/MacOS/Attic"
+fi
 # Version from git: the latest v* tag (v0.1.2 -> 0.1.2), with "-dev" when the
 # code has moved past it. release.sh insists on an exact tag instead.
 if [ -z "$VERSION" ]; then
