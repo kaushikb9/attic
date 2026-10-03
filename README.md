@@ -61,11 +61,17 @@ to confirm, and deleted photos stay in Recently Deleted for 30 days.
 ## Install
 
 1. [Download Attic.dmg](../../releases/latest/download/Attic.dmg),
-   open it, and drag Attic to Applications.
+   open it, and drag Attic to **Applications**. If you aren't an admin on this
+   Mac, use **~/Applications** instead (create the folder if it doesn't exist).
 2. The first time you open it, macOS says it can't verify the app. Attic isn't
    notarized by Apple yet. Open **System Settings › Privacy & Security**,
    scroll down, and click **Open Anyway** next to Attic.
 3. Allow access to your photo library when asked.
+
+To update, quit Attic and drag the new version over the old one. Your
+decisions stay; they live in `~/Library/Application Support/Attic`.
+Tip: `gh release download -R <owner>/attic -p Attic.dmg` downloads without the
+quarantine flag, so there's no "Open Anyway" step.
 
 ## Build from source
 
@@ -78,8 +84,8 @@ isn't needed.
 scripts/screenshots.sh   # regenerate the README screenshots from the demo library
 ```
 
-Releases: `git tag vX.Y.Z && ./release.sh --publish`. See
-[AGENTS.md](AGENTS.md) for how it works.
+Maintainers release with `git tag -a vX.Y.Z -m "<what changed>" && ./release.sh --publish`.
+See [AGENTS.md](AGENTS.md) for how it works.
 
 ## License
 

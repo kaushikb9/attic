@@ -77,9 +77,9 @@ Build pieces, all of which work with just the Command Line Tools:
 - `swift build` compiles.
 - `scripts/build-app.sh` wraps it into `dist/Attic.app`: Info.plist, icon via
   `sips` and `iconutil`, and an ad-hoc `codesign` with id `app.attic.mac`.
-- `scripts/test.sh` is `swift test` with the Command Line Tools' Testing
-  framework on the path. Plain `swift test` fails there with "no such module
-  Testing".
+- `scripts/test.sh` is `swift test`, plus the Command Line Tools' Testing
+  framework path when Xcode isn't selected (plain `swift test` fails there
+  with "no such module Testing"). With Xcode it's plain `swift test`.
 
 ## How to verify
 
@@ -130,6 +130,33 @@ live in `Grouping.Tuning`, with notes.
 - **Memory**: decisions are per photo in `state.json`. A group whose photos
   were all decided isn't shown again. When a new shot joins, the old ones show
   as "kept before". Skip is for this session only.
+
+## Measured (2026-10-03, Apple M4)
+
+- Grouping on synthetic libraries (768-number prints, bursts of retakes, 3%
+  copies; no real photos): 5k photos 0.06 s, 20k 0.67 s, 50k 3.9 s. Events:
+  0.05 s, 0.18 s, 0.45 s.
+- Vision: about 13 ms per photo at 512 px, one at a time. The analyzer runs six
+  at once, and the cache means only new or edited photos are looked at again.
+  How long PhotoKit takes to hand over previews isn't measured (that needs a
+  real library).
+- The app: 3.0 MB with symbols (v0.1.3), about 1.9 MB stripped (from v0.1.4).
+
+## Known gaps
+
+Measured or confirmed, deliberately not fixed yet:
+- **Every decision rebuilds the whole grouping on the main thread** (`record`
+  and `undo` call `rebuild`). From the numbers above, that's about 0.85 s per
+  click at 20k photos and about 4.3 s at 50k. The fix is to keep the near pairs
+  from the scan and only re-filter on a decision.
+- **No live library updates.** Photos added or deleted in Photos while Attic
+  is open show up only after Rescan (⌘R); there's no PhotoKit change observer.
+- **Thresholds come from one ~650-photo library.** Larger or very different
+  libraries may want different cuts.
+- **Decisions are per Mac.** `state.json` is local, so a second Mac on the
+  same iCloud library starts fresh.
+- Videos, Live Photo motion and iCloud-only photos (no preview on the Mac) are
+  not looked at; the sidebar counts the iCloud-only ones.
 
 ## Deploy
 
